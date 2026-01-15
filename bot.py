@@ -1682,6 +1682,11 @@ async def welcome_message(message: types.Message):
         except:
             pass
 
+# Health check endpoint для Render (чтобы инстанс не "засыпал")
+async def health_check(request):
+    """Health check endpoint для мониторинга Render"""
+    return web.json_response({'status': 'ok', 'service': 'tower-bot-telegram'})
+
 # HTTP API для веб-приложения
 async def check_user_status(request):
     """API endpoint для проверки статуса пользователя (депозит и подписка)"""
@@ -1737,6 +1742,8 @@ async def main():
     
     # Создаем HTTP сервер для API
     app = web.Application()
+    app.router.add_get('/', health_check)  # Health check для Render
+    app.router.add_get('/health', health_check)  # Альтернативный health check
     app.router.add_post('/api/check_user', check_user_status)
     
     # Настраиваем CORS для работы с веб-приложением

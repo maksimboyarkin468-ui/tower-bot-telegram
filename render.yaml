@@ -11,4 +11,4 @@ services:
         sync: false
       - key: CASINO_REF_LINK
         sync: false
-    healthCheckPath: /
+    healthCheckPath: /health
