@@ -1815,7 +1815,7 @@ async def main():
             retry_count = 0  # Сбрасываем счетчик при успешном запуске
             consecutive_errors = 0  # Сбрасываем счетчик последовательных ошибок
             
-            # Переменные для отслеживания состояния polling (инициализируем здесь, чтобы были доступны в health_check)
+            # Переменные для отслеживания состояния polling (инициализируем здесь, чтобы были доступны в bot_health_monitor)
             polling_active = {'status': True}
             # Отслеживание времени последнего обновления
             last_update_time = {'time': asyncio.get_event_loop().time()}
@@ -1837,7 +1837,7 @@ async def main():
                 return await handler(event, data)
             
             # Запускаем задачу для периодической проверки соединения и обновлений
-            async def health_check():
+            async def bot_health_monitor():
                 """Периодическая проверка работоспособности бота и получения обновлений"""
                 consecutive_failures = 0
                 max_failures = 3
@@ -1930,7 +1930,7 @@ async def main():
                             raise ConnectionError(f"Health check critical error: {e}")
             
             # Запускаем health check в фоне
-            health_check_task = asyncio.create_task(health_check())
+            health_check_task = asyncio.create_task(bot_health_monitor())
             
             logger.info("🔄 Начинаю polling...")
             logger.info(f"📋 Зарегистрировано обработчиков: {len(dp.message.handlers)} сообщений, {len(dp.callback_query.handlers)} callback")
