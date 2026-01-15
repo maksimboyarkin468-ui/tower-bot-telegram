@@ -1682,11 +1682,6 @@ async def welcome_message(message: types.Message):
         except:
             pass
 
-# Health check endpoint для Render (чтобы инстанс не "засыпал")
-async def health_check(request):
-    """Health check endpoint для мониторинга Render"""
-    return web.json_response({'status': 'ok', 'service': 'tower-bot-telegram'})
-
 # HTTP API для веб-приложения
 async def check_user_status(request):
     """API endpoint для проверки статуса пользователя (депозит и подписка)"""
@@ -1734,6 +1729,11 @@ async def check_user_status(request):
     except Exception as e:
         logger.error(f"Ошибка в API check_user_status: {e}")
         return web.json_response({'error': 'Internal server error'}, status=500)
+
+# Health check endpoint для Render (чтобы инстанс не "засыпал")
+async def health_check(request):
+    """Health check endpoint для мониторинга Render"""
+    return web.json_response({'status': 'ok', 'service': 'tower-bot-telegram'})
 
 # Главная функция с обработкой ошибок и переподключением
 async def main():
