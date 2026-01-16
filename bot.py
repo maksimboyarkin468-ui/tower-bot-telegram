@@ -76,7 +76,14 @@ SUCCESS_PHOTO_PATH = os.path.join(BASE_IMAGES_DIR, "success.webp")
 SUCCESS_PHOTO = SUCCESS_PHOTO_PATH if os.path.exists(SUCCESS_PHOTO_PATH) else None
 
 # Инициализация бота и диспетчера
-bot = Bot(token=BOT_TOKEN)
+# Настройки для стабильной работы на Render и других облачных платформах
+# session_timeout - базовый таймаут для HTTP клиента
+# request_timeout для long polling будет автоматически = session_timeout + polling_timeout
+# Это гарантирует, что HTTP клиент не разорвет соединение раньше, чем завершится long polling
+bot = Bot(
+    token=BOT_TOKEN,
+    session_timeout=30  # Базовый таймаут для HTTP сессии (30 секунд)
+)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
@@ -1934,6 +1941,11 @@ async def main():
             
             logger.info("🔄 Начинаю polling...")
             logger.info(f"📋 Зарегистрировано обработчиков: {len(dp.message.handlers)} сообщений, {len(dp.callback_query.handlers)} callback")
+            logger.info("⚙️ Настройки для работы на Render:")
+            logger.info("   • Long polling с таймаутом 60 секунд")
+            logger.info("   • Автоматический перезапуск при отсутствии обновлений > 5 минут")
+            logger.info("   • Профилактический перезапуск каждые 6 часов")
+            logger.info("   • Health check endpoint: /health")
             
             # Сбрасываем время последнего обновления при запуске
             last_update_time['time'] = asyncio.get_event_loop().time()
@@ -1945,10 +1957,28 @@ async def main():
             # Запуск polling с обработкой ошибок и таймаутами
             polling_task = None
             try:
+                # Настройки polling для стабильной работы на Render
+                # polling_timeout - время ожидания обновлений от Telegram (long polling)
+                # Рекомендуется 20-60 секунд для баланса между отзывчивостью и стабильностью
+                # На Render лучше использовать большее значение для предотвращения таймаутов
+                polling_timeout = 60  # 60 секунд - оптимально для Render
+                
+                # limit - количество обновлений за один запрос (1-100)
+                # Больше обновлений = меньше запросов, но больше нагрузка
+                polling_limit = 100  # Максимум для эффективности
+                
+                logger.info(f"📋 Настройки polling:")
+                logger.info(f"   • polling_timeout: {polling_timeout} сек")
+                logger.info(f"   • session_timeout: {bot.session.timeout} сек")
+                logger.info(f"   • limit: {polling_limit} обновлений за запрос")
+                logger.info(f"   • allowed_updates: {dp.resolve_used_update_types()}")
+                
                 # Создаем задачу для polling с возможностью отмены
                 polling_task = asyncio.create_task(
                     dp.start_polling(
                         bot,
+                        polling_timeout=polling_timeout,  # Таймаут для long polling
+                        limit=polling_limit,  # Количество обновлений за запрос
                         allowed_updates=dp.resolve_used_update_types(),
                         close_bot_session=False,  # Не закрываем сессию автоматически
                         drop_pending_updates=True  # Удаляем ожидающие обновления при старте
