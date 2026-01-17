@@ -520,7 +520,11 @@ async def cmd_start(message: types.Message):
         username = message.from_user.username
         first_name = message.from_user.first_name
         
-        logger.info(f"✅ Обработка команды /start от пользователя {user_id} (username: @{username or 'нет'})")
+                logger.info("=" * 60)
+        logger.info(f"🚀 КОМАНДА /start ПОЛУЧЕНА от пользователя {user_id} (username: @{username or 'нет'})")
+        logger.info(f"📝 Текст сообщения: {message.text}")
+        logger.info(f"🆔 ID сообщения: {message.message_id}")
+        logger.info("=" * 60)
         
         # Регистрируем пользователя с таймаутом
         try:
